@@ -1,8 +1,8 @@
-import express from 'express';
-import basicAuth from 'express-basic-auth';
-import { randomId } from './util.js';
-import { basicAuthConfig } from './config.js'
-import pool from './db.js';
+const express = require('express');
+const basicAuth = require('express-basic-auth');
+const randomId = require('./util.js').randomId;
+const basicAuthConfig = require('./config.js').basicAuthConfig;
+const pool = require('./db.js');
 
 pool.query(`CREATE TABLE IF NOT EXISTS apps (
     id VARCHAR(32) PRIMARY KEY,
@@ -11,7 +11,7 @@ pool.query(`CREATE TABLE IF NOT EXISTS apps (
     if (err) console.error(err);
 });
 
-export default class App {
+class App {
     id = randomId(32);
     name;
 
@@ -20,7 +20,7 @@ export default class App {
     }
 }
 
-export class AppRepository {
+class AppRepository {
     static getApps() {
         return new Promise((resolve, reject) => {
             pool.query('SELECT * FROM apps', (err, res) => {
@@ -87,10 +87,10 @@ export class AppRepository {
     }
 }
 
-export const appRouter = express.Router();
-appRouter.use(basicAuth(basicAuthConfig));
+const router = express.Router();
+router.use(basicAuth(basicAuthConfig));
 
-appRouter.get('/', (req, res) => {
+router.get('/', (req, res) => {
     AppRepository.getApps()
         .then((apps) => {
             res.json(apps);
@@ -100,7 +100,7 @@ appRouter.get('/', (req, res) => {
         })
 });
 
-appRouter.post('/', basicAuth(basicAuthConfig), (req, res) => {
+router.post('/', basicAuth(basicAuthConfig), (req, res) => {
     const name = req.body.name;
     if (!name) {
         res.status(400).send({ message: 'Invalid app name' });
@@ -116,7 +116,7 @@ appRouter.post('/', basicAuth(basicAuthConfig), (req, res) => {
         })
 });
 
-appRouter.get('/:appId', basicAuth(basicAuthConfig), (req, res) => {
+router.get('/:appId', basicAuth(basicAuthConfig), (req, res) => {
     AppRepository.getApp(req.params.appId)
         .then((app) => {
             if (!app) {
@@ -130,7 +130,7 @@ appRouter.get('/:appId', basicAuth(basicAuthConfig), (req, res) => {
         })
 })
 
-appRouter.patch('/:appId', (req, res) => {
+router.patch('/:appId', (req, res) => {
     AppRepository.updateApp(req.params.appId, req.body.name)
         .then((app) => {
             if (!app) {
@@ -144,7 +144,7 @@ appRouter.patch('/:appId', (req, res) => {
         })
 })
 
-appRouter.delete('/:appId', (req, res) => {
+router.delete('/:appId', (req, res) => {
     AppRepository.deleteApp(req.params.appId)
         .then((app) => {
             res.send(204);
@@ -152,3 +152,9 @@ appRouter.delete('/:appId', (req, res) => {
             res.status(500).send();
         })
 })
+
+module.exports = {
+    App,
+    AppRepository,
+    router
+}

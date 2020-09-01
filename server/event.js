@@ -1,10 +1,13 @@
-import { randomId, firstOfMonth, lastOfMonth } from './util.js';
-import pool from './db.js';
-import express from 'express';
-import basicAuth from 'express-basic-auth';
-import { basicAuthConfig } from './config.js'
+const utils = require('./util.js');
+const randomId = utils.randomId;
+const firstOfMonth = utils.firstOfMonth;
+const lastOfMonth = utils.lastOfMonth;
+const pool = require('./db.js');
+const express = require('express');
+const basicAuth = require('express-basic-auth');
+const basicAuthConfig = require('./config.js')
 
-export default class Event {
+class Event {
     static types = [
         'view',
         'click',
@@ -88,7 +91,7 @@ pool.query(`CREATE TABLE IF NOT EXISTS events (
         ON DELETE CASCADE
 )`);
 
-export class EventRepository {
+class EventRepository {
     static getEvents(
         appId,
         from,
@@ -142,8 +145,8 @@ export class EventRepository {
     }
 }
 
-export const eventRouter = express.Router()
-eventRouter.get('/', basicAuth(basicAuthConfig), (req, res) => {
+const router = express.Router()
+router.get('/', basicAuth(basicAuthConfig), (req, res) => {
     const appId = req.query.appId;
     if (!appId) {
         res.status(400).send({ message: 'Invalid appId' });
@@ -164,7 +167,7 @@ eventRouter.get('/', basicAuth(basicAuthConfig), (req, res) => {
 // events will be coming from all over the place, I don't think it makes
 // sense to try to put auth in front of this. Even some kind of client
 // "secret" would be trivial to deduce by examining the requests.
-eventRouter.post('/', (req, res) => {
+router.post('/', (req, res) => {
     if (typeof req.body.appId === "undefined") {
         res.status(400).json({ message: 'Invalid appId' });
         return;
@@ -206,3 +209,9 @@ eventRouter.post('/', (req, res) => {
             res.sendStatus(500);
         });
 });
+
+module.exports = {
+    Event,
+    EventRepository,
+    router
+}

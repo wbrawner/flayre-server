@@ -1,10 +1,10 @@
 const users = {};
 users[process.env.ADMIN_USER || 'admin'] = process.env.ADMIN_USER || 'flayre'
-export const basicAuthConfig = {
+const basicAuthConfig = {
     users: users
 };
 
-export const dbConfig = {
+const dbConfig = {
     connectionLimit: process.env.DB_POOL_SIZE || 10,
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
@@ -13,4 +13,10 @@ export const dbConfig = {
     database: process.env.DB_NAME || 'flayre'
 }
 
-export const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
+
+module.exports = {
+    basicAuthConfig,
+    dbConfig,
+    port,
+}

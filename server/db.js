@@ -1,6 +1,5 @@
-import mysql from 'mysql';
-import { dbConfig } from './config.js';
+const mysql = require('mysql');
+const dbConfig = require('./config.js').dbConfig;
 
 const pool = mysql.createPool(dbConfig);
-
-export default pool
+module.exports = pool

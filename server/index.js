@@ -1,8 +1,8 @@
-import express from 'express';
-import { eventRouter } from './event.js';
-import { port } from './config.js';
-import { randomId } from './util.js';
-import { appRouter } from './app.js';
+const express = require('express');
+const eventRouter = require('./event.js').router;
+const port = require('./config.js').port;
+const randomId = require('./util.js').randomId;
+const appRouter = require('./app.js').router;
 
 const app = express();
 app.use(express.json());
@@ -16,8 +16,8 @@ app.get('/id', (req, res) => {
     res.send(randomId(length));
 });
 
-app.use('/apps', appRouter)
-app.use('/events', eventRouter)
+app.use('/api/apps', appRouter)
+app.use('/api/events', eventRouter)
 
 app.listen(port, () => {
     console.log(`Started Flayre server on port ${port}`);

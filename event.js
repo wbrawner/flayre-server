@@ -188,7 +188,7 @@ eventRouter.post('/', (req, res) => {
 
     EventRepository.createEvent(new Event(
         req.body.appId,
-        req.body.date,
+        new Date(req.body.date),
         req.body.userAgent,
         req.body.platform,
         req.body.manufacturer,

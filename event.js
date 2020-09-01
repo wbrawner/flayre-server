@@ -127,6 +127,19 @@ export class EventRepository {
             });
         });
     }
+
+    static createEvent(event) {
+        return new Promise((resolve, reject) => {
+            pool.query('INSERT INTO events SET ?', event, (err, res, fields) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(event);
+            });
+        })
+    }
 }
 
 export const eventRouter = express.Router()
@@ -173,7 +186,7 @@ eventRouter.post('/', (req, res) => {
         return;
     }
 
-    const event = new Event(
+    EventRepository.createEvent(new Event(
         req.body.appId,
         req.body.date,
         req.body.userAgent,
@@ -185,8 +198,11 @@ eventRouter.post('/', (req, res) => {
         req.body.sessionId,
         req.body.data,
         req.body.type,
-    );
-
-    events.push(event);
-    res.json(event);
+    ))
+        .then((event) => {
+            res.json(event);
+        }).catch((err) => {
+            console.error(err);
+            res.sendStatus(500);
+        });
 });

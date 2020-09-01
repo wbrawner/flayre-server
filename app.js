@@ -111,7 +111,8 @@ appRouter.post('/', basicAuth(basicAuthConfig), (req, res) => {
         .then((app) => {
             res.json(app);
         }).catch((err) => {
-            res.status(500).send();
+            console.error(err);
+            res.sendStatus(500);
         })
 });
 

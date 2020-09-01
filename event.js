@@ -1,6 +1,13 @@
 import { randomId } from './util.js';
 
 export default class Event {
+    static types = [
+        'view',
+        'click',
+        'error',
+        'crash',
+    ];
+
     id = randomId(32);
     appId = '';
     date = new Date();
@@ -9,7 +16,7 @@ export default class Event {
     userAgent = '';
 
     platform = '';
-    // Unused on web
+    // For native only
     manufacturer = '';
     // This doubles as the browser for web
     model = '';
@@ -17,17 +24,20 @@ export default class Event {
 
     locale = '';
     sessionId = '';
+
+    /**
+     * This can have different meanings depending on what the event's type is:
+     * 
+     * view -> page path
+     * click -> element identifier
+     * error & crash -> stacktrace
+     */
     data;
 
-    // For interactions only
-    // The path for page views or some identifier for clicks
-    element;
-    // view or click, more could be added later
+    /**
+     * view,click, error, or crash 
+    */
     type;
-
-    // For errors only
-    stacktrace;
-    fatal;
 
     constructor(
         appId,
@@ -40,10 +50,7 @@ export default class Event {
         locale,
         sessionId,
         data,
-        element,
         type,
-        stacktrace,
-        fatal
     ) {
         this.appId = appId;
         this.date = date;
@@ -55,71 +62,6 @@ export default class Event {
         this.locale = locale;
         this.sessionId = sessionId;
         this.data = data;
-        this.element = element;
         this.type = type;
-        this.stacktrace = stacktrace;
-        this.fatal = fatal;
-    }
-
-    static Interaction(
-        appId,
-        date,
-        userAgent,
-        platform,
-        manufacturer,
-        model,
-        version,
-        locale,
-        sessionId,
-        data,
-        element,
-        type,
-    ) {
-        return new Event(
-            appId,
-            date,
-            userAgent,
-            platform,
-            manufacturer,
-            model,
-            version,
-            locale,
-            sessionId,
-            data,
-            element,
-            type,
-        )
-    }
-
-    static Error(
-        appId,
-        date,
-        userAgent,
-        platform,
-        manufacturer,
-        model,
-        version,
-        locale,
-        sessionId,
-        data,
-        stacktrace,
-        fatal
-    ) {
-        return new Event(
-            appId,
-            date,
-            userAgent,
-            platform,
-            manufacturer,
-            model,
-            version,
-            locale,
-            sessionId,
-            data,
-            null,
-            null,
-            stacktrace,
-            fatal,
-        )
     }
 }

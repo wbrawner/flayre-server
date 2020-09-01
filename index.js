@@ -35,48 +35,41 @@ app.get('/events', (req, res) => {
 });
 
 app.post('/events', (req, res) => {
+    if (typeof req.body.appId === "undefined") {
+        // TODO: Use some kind of authentication for this? 
+        res.status(400).json({ message: 'Invalid appId' });
+        return;
+    }
+
     if (typeof req.body.sessionId === "undefined") {
         res.status(400).json({ message: 'Invalid sessionId' });
         return;
     }
 
-    let event;
-    if (typeof req.body.element === "string"
-        && typeof req.body.type === "string") {
-        if (req.body.type !== 'view' || req.body.type !== 'click') {
-            res.status(400).json({ message: 'Invalid event type' });
-            return;
-        }
-        event = Event.Interaction(
-            req.body.userAgent,
-            req.body.platform,
-            req.body.manufacturer,
-            req.body.model,
-            req.body.version,
-            req.body.locale,
-            req.body.sessionId,
-            req.body.data,
-            req.body.element,
-            req.body.type,
-        );
-    } else if (typeof req.body.stacktrace === "string"
-        && typeof req.body.fatal === "boolean") {
-        event = Event.Error(
-            req.body.userAgent,
-            req.body.platform,
-            req.body.manufacturer,
-            req.body.model,
-            req.body.version,
-            req.body.locale,
-            req.body.sessionId,
-            req.body.data,
-            req.body.element,
-            req.body.type,
-        );
-    } else {
-        res.status(400).json({ message: 'Invalid event data' });
+    if (Event.types.indexOf(req.body.type) === -1) {
+        res.status(400).json({ message: 'Invalid event type' });
         return;
     }
+
+    if (typeof req.body.data === "undefined") {
+        // TODO: Handle data validation better than this
+        res.status(400).json({ message: 'Invalid data' });
+        return;
+    }
+
+    const event = new Event(
+        req.body.appId,
+        req.body.date,
+        req.body.userAgent,
+        req.body.platform,
+        req.body.manufacturer,
+        req.body.model,
+        req.body.version,
+        req.body.locale,
+        req.body.sessionId,
+        req.body.data,
+        req.body.type,
+    );
 
     events.push(event);
     res.json(event);

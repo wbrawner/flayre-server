@@ -11,6 +11,13 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME || 'flayre'
 });
 
+pool.query(`CREATE TABLE IF NOT EXISTS apps (
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(256) UNIQUE NOT NULL
+)`, (err, res) => {
+    if (err) console.error(err);
+});
+
 pool.query(`CREATE TABLE IF NOT EXISTS events (
     id VARCHAR(32) PRIMARY KEY,
     appId VARCHAR(32) NOT NULL,
@@ -22,12 +29,79 @@ pool.query(`CREATE TABLE IF NOT EXISTS events (
     version VARCHAR(32),
     locale VARCHAR(8),
     sessionId VARCHAR(32),
-    data JSON DEFAULT NULL,
-    element VARCHAR(256) DEFAULT NULL,
+    data TEXT DEFAULT NULL,
     type VARCHAR(256) DEFAULT NULL,
-    stacktrace VARCHAR(2048) DEFAULT NULL,
-    fatal BOOLEAN DEFAULT NULL
+    FOREIGN KEY (appId)
+        REFERENCES apps(id)
+        ON DELETE CASCADE
 )`);
+
+export class AppRepository {
+    static getApps() {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM apps', (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(res);
+            });
+        })
+    }
+
+    static getApp(appId) {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM apps WHERE id = ? LIMIT 1', appId, (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(res[0]);
+            });
+        })
+    }
+
+    static createApp(app) {
+        return new Promise((resolve, reject) => {
+            pool.query('INSERT INTO apps SET ?', app, (err, res, fields) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(app);
+            });
+        })
+    }
+
+    static updateApp(appId, name) {
+        return new Promise((resolve, reject) => {
+            pool.query('UPDATE apps SET name = ? WHERE id = ?', [name, appId], (err, res, fields) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(res.affectedRows === 1);
+            });
+        })
+    }
+
+    static deleteApp(appId) {
+        return new Promise((resolve, reject) => {
+            pool.query('DELETE FROM apps WHERE id = ?', appId, (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(res);
+            });
+        })
+    }
+}
 
 export class EventRepository {
     static getEvents(

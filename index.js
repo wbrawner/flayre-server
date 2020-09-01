@@ -1,7 +1,8 @@
 import express from 'express';
 import Event from './event.js';
 import { randomId, firstOfMonth, lastOfMonth } from './util.js';
-import { EventRepository } from './db.js';
+import { AppRepository, EventRepository } from './db.js';
+import App from './app.js';
 
 const app = express();
 app.use(express.json());
@@ -16,6 +17,68 @@ app.get('/id', (req, res) => {
     const length = Number.parseInt(req.query['length']) || 32;
     res.send(randomId(length));
 });
+
+app.get('/apps', (req, res) => {
+    AppRepository.getApps()
+        .then((apps) => {
+            res.json(apps);
+        }).catch((err) => {
+            console.error(err);
+            res.status(500).send();
+        })
+});
+
+app.post('/apps', (req, res) => {
+    const name = req.body.name;
+    if (!name) {
+        res.status(400).send({ message: 'Invalid app name' });
+        return;
+    }
+
+    AppRepository.createApp(new App(name))
+        .then((app) => {
+            res.json(app);
+        }).catch((err) => {
+            res.status(500).send();
+        })
+});
+
+app.get('/apps/:appId', (req, res) => {
+    AppRepository.getApp(req.params.appId)
+        .then((app) => {
+            if (!app) {
+                res.sendStatus(404);
+            } else {
+                res.json(app);
+            }
+        }).catch((err) => {
+            console.error(err);
+            res.status(500).send();
+        })
+})
+
+app.patch('/apps/:appId', (req, res) => {
+    AppRepository.updateApp(req.params.appId, req.body.name)
+        .then((app) => {
+            if (!app) {
+                res.sendStatus(404);
+            } else {
+                res.sendStatus(204);
+            }
+        }).catch((err) => {
+            console.error(err);
+            res.status(500).send();
+        })
+})
+
+app.delete('/apps/:appId', (req, res) => {
+    AppRepository.deleteApp(req.params.appId)
+        .then((app) => {
+            res.send(204);
+        }).catch((err) => {
+            res.status(500).send();
+        })
+})
 
 app.get('/events', (req, res) => {
     const appId = req.query.appId;

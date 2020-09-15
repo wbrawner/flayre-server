@@ -6,13 +6,14 @@ const pool = require('./db.js');
 const express = require('express');
 const basicAuth = require('express-basic-auth');
 const basicAuthConfig = require('./config.js')
+const cors = require('cors');
 
 class Event {
     static types = [
-        'view',
-        'click',
-        'error',
-        'crash',
+        'VIEW',
+        'CLICK',
+        'ERROR',
+        'CRASH',
     ];
 
     id = randomId(32);
@@ -167,16 +168,18 @@ router.get('/', basicAuth(basicAuthConfig), (req, res) => {
 // events will be coming from all over the place, I don't think it makes
 // sense to try to put auth in front of this. Even some kind of client
 // "secret" would be trivial to deduce by examining the requests.
-router.post('/', (req, res) => {
+router.post('/', cors({origin: true, methods: ['POST']}), (req, res) => {
+    console.log(req.body);
     if (typeof req.body.appId === "undefined") {
         res.status(400).json({ message: 'Invalid appId' });
         return;
     }
 
-    if (typeof req.body.sessionId === "undefined") {
-        res.status(400).json({ message: 'Invalid sessionId' });
-        return;
-    }
+    // Without Cookies, websites can't consistently send the same sessionId
+    // if (typeof req.body.sessionId === "undefined") {
+    //     res.status(400).json({ message: 'Invalid sessionId' });
+    //     return;
+    // }
 
     if (Event.types.indexOf(req.body.type) === -1) {
         res.status(400).json({ message: 'Invalid event type' });
@@ -192,7 +195,7 @@ router.post('/', (req, res) => {
     EventRepository.createEvent(new Event(
         req.body.appId,
         new Date(req.body.date),
-        req.body.userAgent,
+        req.headers['User-Agent'],
         req.body.platform,
         req.body.manufacturer,
         req.body.model,
